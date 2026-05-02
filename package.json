@@ -1,7 +1,7 @@
 {
   "name": "backend_test",
   "version": "1.0.0",
-  "description": "backend test for Afford medical placement",
+  "description": "backend track",
   "main": "src/app.js",
   "scripts": {
     "node": "node src/app.js",
