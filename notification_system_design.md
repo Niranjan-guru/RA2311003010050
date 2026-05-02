@@ -79,6 +79,17 @@ ORDER BY createdAt DESC;
 CREATE INDEX idx_notifications
 ON notifications(userId, isRead, createdAt DESC);
 
+## STAGE 4. DB overload optimization
+Instead of fetching all notifications:
+
+GET /notifications?userId=123&page=1&limit=20
+
+SQL:
+SELECT * FROM notifications
+WHERE userId = '123'
+ORDER BY createdAt DESC
+LIMIT 20 OFFSET 0;
+
 
 
 ## STAGE 5. Bulk Notification Handling
@@ -91,6 +102,30 @@ Solution:
 - Producer sends notification event
 - Workers consume and process asynchronously
 
+function notify_all(student_ids, message):
+
+    for student_id in student_ids:
+        queue.publish({
+            "student_id": student_id,
+            "message": message
+        })
+
+
+worker():
+
+    while true:
+        job = queue.consume()
+
+        try:
+            save_to_db(job.student_id, job.message)
+
+            send_email(job.student_id, job.message)
+
+            push_to_app(job.student_id, job.message)
+
+        except error:
+            retry(job)
+
 Benefits:
 - Avoids server overload
 - Improves scalability
@@ -101,9 +136,57 @@ Notifications are prioritized based on:
 
 priority = importance + recency
 
-Implementation:
-- Use a Max Heap / Priority Queue
-- Higher priority notifications shown first
+Use a Max Heap (Priority Queue)
+
+---
+
+### Pseudocode
+
+function getTopNotifications(notifications, N):
+
+    heap = new MaxHeap()
+
+    for notification in notifications:
+
+        weight = getWeight(notification.type)
+
+        recency = getRecency(notification.timestamp)
+
+        score = weight * 1000 + recency
+
+        heap.push(notification, score)
+
+    result = []
+
+    for i in range(N):
+        result.append(heap.pop())
+
+    return result
+
+---
+
+### Efficient Update Strategy
+
+When new notification arrives:
+- Insert into heap → O(log N)
+- Maintain only top N elements
+
+---
+
+### Optimized Approach (Better)
+
+Use Min Heap of size N:
+
+for notification in notifications:
+    push into heap
+
+    if heap size > N:
+        remove smallest
+
+→ O(N log N) → efficient for streaming data
+
+---
+
 
 
 
