@@ -1,6 +1,6 @@
 # Notification System Design
 
-## 1. API DESIGN
+## STAGE 1. API DESIGN
 
 ### 1.1 Get Notification
 GET /notifications?userId=123
@@ -43,7 +43,7 @@ Response:
   "success": true
 }
 
-## 2. Database Design
+## STAGE 2. Database Design
 
 ### 2.1 Choice of Database
 
@@ -65,7 +65,7 @@ Table: notifications
 | isRead    | BOOLEAN     | Read status |
 | createdAt | TIMESTAMP   | Creation time |
 
-## 3. Query Optimization
+## STAGE 3. Query Optimization
 
 Query:
 SELECT * FROM notifications
@@ -78,6 +78,32 @@ ORDER BY createdAt DESC;
 ### Solution:
 CREATE INDEX idx_notifications
 ON notifications(userId, isRead, createdAt DESC);
+
+
+
+## STAGE 5. Bulk Notification Handling
+
+Problem:
+Sending notifications to thousands of users at once
+
+Solution:
+- Use message queue (Kafka / RabbitMQ)
+- Producer sends notification event
+- Workers consume and process asynchronously
+
+Benefits:
+- Avoids server overload
+- Improves scalability
+
+## STAGE 6. Priority Handling
+
+Notifications are prioritized based on:
+
+priority = importance + recency
+
+Implementation:
+- Use a Max Heap / Priority Queue
+- Higher priority notifications shown first
 
 
 
